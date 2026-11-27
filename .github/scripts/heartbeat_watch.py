@@ -16,6 +16,7 @@ import json
 import subprocess
 
 STALE_SECS = 600
+REPO = "hyh120942-lang/aoying-heartbeat"
 UTC = datetime.timezone.utc
 CST = datetime.timezone(datetime.timedelta(hours=8))
 INSTANCES = {
@@ -53,11 +54,11 @@ def main():
         hb = {}
 
     # Ensure the label exists (no-op if it already does).
-    run(["gh", "label", "create", "heartbeat-stale",
+    run(["gh", "label", "create", "heartbeat-stale", "--repo", REPO,
          "--color", "B60205",
          "--description", "Robot polling stopped (external heartbeat)"])
 
-    open_issues = run(["gh", "issue", "list", "--label", "heartbeat-stale",
+    open_issues = run(["gh", "issue", "list", "--repo", REPO, "--label", "heartbeat-stale",
                        "--state", "open", "--json", "number,title"])
     try:
         issues = json.loads(open_issues.stdout or "[]")
@@ -91,7 +92,7 @@ def main():
                     f"请检查虚拟机 / sing-box / 轮询状态。\n\n"
                     f"恢复后本 issue 会由 watcher 自动关闭。"
                 )
-                r = run(["gh", "issue", "create", "--title", title,
+                r = run(["gh", "issue", "create", "--repo", REPO, "--title", title,
                          "--body", body, "--label", "heartbeat-stale"])
                 if r.returncode == 0:
                     print(f"{key} STALE age={age_min}min, created issue: {r.stdout.strip()}")
@@ -100,7 +101,7 @@ def main():
         else:
             if n:
                 comment = f"已恢复：轮询恢复，最后心跳 {fmt_both(ts)}。"
-                r = run(["gh", "issue", "close", str(n), "--comment", comment])
+                r = run(["gh", "issue", "close", str(n), "--repo", REPO, "--comment", comment])
                 print(f"{key} fresh age={age:.0f}s, closed issue #{n} (rc={r.returncode})")
             else:
                 print(f"{key} fresh age={age:.0f}s, no open issue")
