@@ -58,7 +58,10 @@ def main():
          "--color", "B60205",
          "--description", "Robot polling stopped (external heartbeat)"])
 
-    open_issues = run(["gh", "issue", "list", "--repo", REPO, "--label", "heartbeat-stale",
+    # List ALL open issues and match by title in Python (do not filter by
+    # label server-side: GitHub's label index can lag seconds behind a
+    # just-created issue, which broke dedup in testing).
+    open_issues = run(["gh", "issue", "list", "--repo", REPO,
                        "--state", "open", "--json", "number,title"])
     try:
         issues = json.loads(open_issues.stdout or "[]")
